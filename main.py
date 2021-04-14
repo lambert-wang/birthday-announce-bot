@@ -86,6 +86,7 @@ COMMAND_ABOUT = '''
 > This bot wishes you a happy birthday!
 > Version 0.0.1
 > Author: Magellan#8465
+> Github: github.com/lambert-wang/birthday-announce-bot
 > 
 > Disclaimer: This bot is under development. Please be patient with bugs and issues. Thanks!
 '''
