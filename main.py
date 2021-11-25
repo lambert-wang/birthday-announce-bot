@@ -193,6 +193,8 @@ class BirthdayBotClient(discord.Client):
                 continue
 
             if forGuild != 'all':
+                print(forGuild)
+                print(guildId)
                 if guildId != forGuild:
                     continue
 
@@ -564,11 +566,12 @@ class BirthdayBotClient(discord.Client):
             # Force announce user birthdays
             #
             if args[1] == 'announce':
-                if isAdminMessage(message) == false:
+                if isAdminMessage(message) == False:
                     await message.channel.send(COMMAND_ADMIN_ONLY)
                     return
                 
-                self.sampleBirthdays(forGuild = message.channel.guild)
+                await self.sampleBirthdays(forGuild = message.channel.guild)
+                return
 
             print('Received message')
             print(message.content)
