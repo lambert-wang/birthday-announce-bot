@@ -180,7 +180,7 @@ class BirthdayBotClient(discord.Client):
             print('Announcements for this hour finished. waiting {} minutes\n'.format(sleepMinutes))
             await asyncio.sleep(sleepMinutes * 60)
 
-    async def sampleBirthdays(self):
+    async def sampleBirthdays(self, forGuild = 'all'):
         if self.is_ready() == False:
             print('Client not ready. Waiting...')
             return
@@ -191,6 +191,10 @@ class BirthdayBotClient(discord.Client):
                     continue
             except KeyError:
                 continue
+
+            if forGuild != 'all':
+                if guildId != forGuild:
+                    continue
 
             guild = self.get_guild(int(guildId))
             announceChannel = guild.get_channel(guildData['channel_id'])
@@ -306,6 +310,10 @@ class BirthdayBotClient(discord.Client):
         if message.content.startswith(COMMAND_PREFIXES):
             args = message.content.split(' ')
 
+            #
+            # !bday
+            # Prints the message sender's birthday
+            #
             if len(args) < 2:
                 # Validate command is sent from a valid channel
                 if self.isValidChannel(message) == False:
@@ -317,7 +325,12 @@ class BirthdayBotClient(discord.Client):
 
                 return await self.commandGetUserBirthday(message.channel, message.author)
 
-            # The only command that can be run from any channel
+            #
+            # !bday channel
+            # ADMIN ONLY
+            # The only command that can be run from any channel.
+            # Sets the current channel as the birthday bot channel.
+            #
             if args[1] == 'channel':
                 if isServerMessage(message) == False:
                     await message.channel.send(COMMAND_SERVER_ONLY)
@@ -331,10 +344,18 @@ class BirthdayBotClient(discord.Client):
                 await message.channel.send('> Set current channel for Birthday announcements!')
                 return
 
-            # Validate command is sent from a valid channel
+            #
+            # All commands below must be sent from a valid channel
+            # Valid channels include direct messages to the bot and messages sent to the
+            # guild's configured channel.
+            #
             if self.isValidChannel(message) == False:
                 return
 
+            #
+            # !bday help
+            # Prints usage information for the bot
+            #
             if args[1] == 'help':
                 if len(args) < 3:
                     await message.channel.send(COMMAND_HELP)
@@ -342,6 +363,10 @@ class BirthdayBotClient(discord.Client):
                     await message.channel.send(COMMAND_HELP_ADMIN)
                 return
 
+            #
+            # !bday about
+            # Prints general information for the bot as well as the current server configuration.
+            #
             if args[1] == 'about':
                 await message.channel.send(COMMAND_ABOUT)
 
@@ -359,12 +384,17 @@ class BirthdayBotClient(discord.Client):
 
                 return
 
-            # Ensure command is sent from a server
+            #
+            # All commands below must be sent from a Guild
+            #
             if isServerMessage(message) == False:
                 await message.channel.send(COMMAND_SERVER_ONLY)
                 return
 
-            # detect if first argument is a user
+            #
+            # !bday [user]
+            # User specific commands
+            #
             userMatches = userMatch(args[1])
             if userMatches != None:
                 if isAdminMessage(message) == False:
@@ -400,6 +430,10 @@ class BirthdayBotClient(discord.Client):
                 await message.channel.send('> Set {}\'s birthday!'.format(user))
                 return
 
+            #
+            # !bday [date]
+            # Personal command for setting a birthday
+            #
             dateMatches = dateMatch(args[1])
             if dateMatches != None:
                 try:
@@ -416,6 +450,11 @@ class BirthdayBotClient(discord.Client):
                 await message.channel.send('> Set {}\'s birthday!'.format(message.author))
                 return
 
+            #
+            # !bday delete [user]
+            # Deletes a user's birthday from the server or deletes the sender's birthday
+            # if no user is specified
+            #
             if args[1] == 'delete':
                 guild = message.channel.guild
                 if len(args) < 3:
@@ -435,6 +474,10 @@ class BirthdayBotClient(discord.Client):
                     await message.channel.send('> Deleted {}\'s birthday!'.format(user))
                     return
 
+            #
+            # !bday upcoming
+            # Prints upcoming birthdays
+            #
             if args[1] == 'upcoming':
                 guild = message.channel.guild
                 guildData = getGuildData(guild.id)
@@ -517,6 +560,15 @@ class BirthdayBotClient(discord.Client):
                 await message.channel.send('> Deleted all birthday bot data for current server!')
                 return
 
+            #
+            # Force announce user birthdays
+            #
+            if args[1] == 'announce':
+                if isAdminMessage(message) == false:
+                    await message.channel.send(COMMAND_ADMIN_ONLY)
+                    return
+                
+                self.sampleBirthdays(forGuild = message.channel.guild)
 
             print('Received message')
             print(message.content)
